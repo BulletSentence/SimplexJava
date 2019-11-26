@@ -2,8 +2,8 @@ public class SimplexEstrutural {
 
 	private static int linha;
 	private static int coluna;
-	public static int MenorOuIgual = 1;
-	public static int MaiorOuIgual = -1;
+	public static int MaiorOuIgual = 1;
+	public static int MenorOuIgual = -1;
 	private static double[][] tabela;
 
 	public static void main(String[] args) {
@@ -21,8 +21,8 @@ public class SimplexEstrutural {
 
 		/*
 		Variáveis de decisão:
-				* x1 = num. de comerciais veiculados durante a novela.
-				* x2 = num. de comerciais veiculados durante os jogos
+		* x1 = num. de comerciais veiculados durante a novela.
+		* x2 = num. de comerciais veiculados durante os jogos
 
 		Função objetivo:
 		Min z = 50x1 + 100x2
@@ -34,16 +34,154 @@ public class SimplexEstrutural {
 
 		Solução ótima: (3.6, 1.4) com z = $320.
 */
+		int numeroDeVariaveis = 2; // x1 e x2
+		int numeroDeRestricoes = 2;
 
 		 double[][] Restricao={
 		 		 {7, 2, MaiorOuIgual, 28},
-				 {2, 12, MenorOuIgual, 24}};
+				 {2, 12, MaiorOuIgual, 24}};
 
 		 double[]maxZ={50,100};
 
-		 montarMatriz(2, 2, Restricao, maxZ);
+		 montarMatriz(numeroDeVariaveis, numeroDeRestricoes, Restricao, maxZ);
 		 System.out.println();
 		SimplexCalculoGeral();
+	}
+
+	public static void SimplexCalculoGeral() {
+		int c, l, cont = 0;
+		while (ValorOtimoSimplex() == false && cont < linha) {
+			c = ColunaPivo();
+			l = LinhaPivo(c);
+			CalcularPivos(l, c);
+			cont++;
+		}
+		for (int i = 0; i < linha; i++) {
+			for (int j = 0; j < coluna; j++) {
+				System.out.print(tabela[i][j] + " ");
+			}
+			System.out.println();
+		}
+		Imprimir();
+	}
+
+	// Encontra a Linha Pivo
+	private static int LinhaPivo(int colunaPivo) {
+		double[] positivosValores = new double[linha];
+		double[] res = new double[linha];
+		int QuantidadeValoresNegativos = 0;
+		for (int i = 0; i < linha; i++) {
+			if (tabela[i][colunaPivo] > 0) {
+				positivosValores[i] = tabela[i][colunaPivo];
+			} else {
+				positivosValores[i] = 0;
+				QuantidadeValoresNegativos++;
+			}
+		}
+
+		if (QuantidadeValoresNegativos == linha)
+			System.out.println("Soluções infinitas");
+		else {
+			for (int i = 0; i < linha; i++) {
+				double val = positivosValores[i];
+				if (val > 0) {
+					res[i] = tabela[i][coluna - 1] / val;
+				}
+			}
+		}
+
+		return MenorValorNumero(res);
+	}
+
+	// Encontra o menor valor da tabela
+	private static int MenorValorNumero(double[] valor) {
+		double minimo;
+		int c, id = 0;
+		minimo = valor[0];
+
+		for (c = 1; c < valor.length; c++) {
+			if (valor[c] > 0) {
+				if (Double.compare(valor[c], minimo) < 0) {
+					minimo = valor[c];
+					id = c;
+				}
+			}
+		}
+
+		return id;
+	}
+
+	private static int MaiorValorNumero(double[] valor) {
+		double maximo = 0;
+		int c, id = 0;
+		maximo = valor[0];
+
+		for (c = 1; c < valor.length; c++) {
+			if (Double.compare(valor[c], maximo) > 0) {
+				maximo = valor[c];
+				id = c;
+			}
+		}
+
+		return id;
+	}
+
+
+	// Encontra a Coluna Pivô
+	private static int ColunaPivo() {
+		double[] valores = new double[coluna];
+		int posicao = 0;
+
+		int pos, count = 0;
+		for (pos = 0; pos < coluna - 1; pos++) {
+			if (tabela[linha - 1][pos] < 0) {
+				count++;
+			}
+		}
+
+		if (count > 1) {
+			for (int i = 0; i < coluna - 1; i++)
+				valores[i] = Math.abs(tabela[linha - 1][i]);
+			posicao = MaiorValorNumero(valores);
+		} else
+			posicao = count - 1;
+
+		return posicao;
+	}
+
+	// Calcula a matriz  com os valores pivos
+	public static double[][] CalcularPivos(int LinhaPivo, int ColunaPivo) {
+		double ValorPivo = tabela[LinhaPivo][ColunaPivo];
+
+		for (int i = 0; i < coluna; i++) {
+			tabela[LinhaPivo][i] /= ValorPivo;
+		}
+		for (int i = 0; i < linha; i++) {
+			if (i != LinhaPivo) {
+				double c = tabela[i][ColunaPivo];
+				for (int j = 0; j < coluna; j++) {
+					tabela[i][j] = tabela[i][j] - (c * (tabela[LinhaPivo][j]));
+				}
+
+			}
+		}
+		return tabela;
+	}
+
+	// Verifica qual o valor Otimo
+	public static boolean ValorOtimoSimplex() {
+		boolean ehOtimo = false;
+		int count = 0;
+		for (int i = 0; i < coluna; i++) {
+			double val = tabela[linha - 1][i];
+			if (val >= 0) {
+				count++;
+			}
+		}
+		if (count == coluna) {
+			ehOtimo = true;
+		}
+		return ehOtimo;
 	}
 
 	public static double[][] montarMatriz(int numeroDeVariaveisX, int numeroDeRestricoes, double[][] MatrizRestricao,
@@ -85,145 +223,6 @@ public class SimplexEstrutural {
 		}
 
 		return tabela;
-	}
-
-	public static void SimplexCalculoGeral() {
-		int c, l, cont = 0;
-		while (ValorOtimoSimplex() == false && cont < linha) {
-			c = ColunaPivo();
-			l = LinhaPivo(c);
-			CalcularPivos(l, c);
-			cont++;
-		}
-		for (int i = 0; i < linha; i++) {
-			for (int j = 0; j < coluna; j++) {
-				System.out.print(tabela[i][j] + " ");
-			}
-			System.out.println();
-		}
-		Imprimir();
-	}
-
-	// Verifica qual o valor Otimo
-	public static boolean ValorOtimoSimplex() {
-		boolean ehOtimo = false;
-		int count = 0;
-		for (int i = 0; i < coluna; i++) {
-			double val = tabela[linha - 1][i];
-			if (val >= 0) {
-				count++;
-			}
-		}
-
-		if (count == coluna) {
-			ehOtimo = true;
-		}
-
-		return ehOtimo;
-	}
-
-	// Calcula a matriz
-	public static double[][] CalcularPivos(int LinhaPivo, int ColunaPivo) {
-		double ValorPivo = tabela[LinhaPivo][ColunaPivo];
-
-		for (int i = 0; i < coluna; i++) {
-			tabela[LinhaPivo][i] /= ValorPivo;
-		}
-		for (int i = 0; i < linha; i++) {
-			if (i != LinhaPivo) {
-				double c = tabela[i][ColunaPivo];
-				for (int j = 0; j < coluna; j++) {
-					tabela[i][j] = tabela[i][j] - (c * (tabela[LinhaPivo][j]));
-				}
-
-			}
-		}
-
-		return tabela;
-	}
-
-	// Encontra a Coluna Pivô
-	private static int ColunaPivo() {
-		double[] valores = new double[coluna];
-		int local = 0;
-
-		int pos, count = 0;
-		for (pos = 0; pos < coluna - 1; pos++) {
-			if (tabela[linha - 1][pos] < 0) {
-				count++;
-			}
-		}
-
-		if (count > 1) {
-			for (int i = 0; i < coluna - 1; i++)
-				valores[i] = Math.abs(tabela[linha - 1][i]);
-			local = MaiorValorNumero(valores);
-		} else
-			local = count - 1;
-
-		return local;
-	}
-
-	// Encontra o menor valor da tabela
-	private static int MenorValorNumero(double[] data) {
-		double minimum;
-		int c, id = 0;
-		minimum = data[0];
-
-		for (c = 1; c < data.length; c++) {
-			if (data[c] > 0) {
-				if (Double.compare(data[c], minimum) < 0) {
-					minimum = data[c];
-					id = c;
-				}
-			}
-		}
-
-		return id;
-	}
-
-	// Encontra a Linha Pivo
-	private static int LinhaPivo(int colunaPivo) {
-		double[] positivosValores = new double[linha];
-		double[] res = new double[linha];
-		int QuantidadeValoresNegativos = 0;
-		for (int i = 0; i < linha; i++) {
-			if (tabela[i][colunaPivo] > 0) {
-				positivosValores[i] = tabela[i][colunaPivo];
-			} else {
-				positivosValores[i] = 0;
-				QuantidadeValoresNegativos++;
-			}
-
-		}
-
-		if (QuantidadeValoresNegativos == linha)
-			System.out.println("Soluções infinitas");
-		else {
-			for (int i = 0; i < linha; i++) {
-				double val = positivosValores[i];
-				if (val > 0) {
-					res[i] = tabela[i][coluna - 1] / val;
-				}
-			}
-		}
-
-		return MenorValorNumero(res);
-	}
-
-	private static int MaiorValorNumero(double[] data) {
-		double maximo = 0;
-		int c, id = 0;
-		maximo = data[0];
-
-		for (c = 1; c < data.length; c++) {
-			if (Double.compare(data[c], maximo) > 0) {
-				maximo = data[c];
-				id = c;
-			}
-		}
-
-		return id;
 	}
 
 	private static void Imprimir() {
