@@ -29,6 +29,6 @@ custo possível?
 		- Exemplo no Código - 
 		Restricao={
 		{7, 2, MaiorOuIgual, 28},
-		{2, 12, MenorOuIgual, 24}};
+		{2, 12, MaiorOuIgual, 24}};
 
 		maxZ={50,100};
